@@ -3,262 +3,446 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GND CTRL // Hermes Agent OS — Secure Access</title>
+    <title>GND CTRL // Hermes Agent OS</title>
     <style>
-        :root { --neon-green: #00ff9d; --neon-blue: #00d4ff; --cassette-black: #1a1a2e; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Courier New', monospace; background: var(--cassette-black); color: white; height: 100vh; overflow: hidden; }
-        
-        /* Auth Gate Styles */
-        #auth-gate {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            display: flex; justify-content: center; align-items: center;
-            background: rgba(26, 26, 46, 0.98); z-index: 1000;
+        :root {
+            --bg: #2a2a2a;
+            --orange: #ff6b35;
+            --font: 'Courier New', monospace;
         }
-        .auth-box {
-            text-align: center; padding: 40px; background: #16213e;
-            border-radius: 12px; border: 2px solid var(--neon-green);
-            max-width: 400px; width: 90%;
+        body {
+            background: var(--bg);
+            color: var(--orange);
+            font-family: var(--font);
+            min-height: 100vh;
+            position: relative;
         }
-        .auth-title { color: var(--neon-green); text-transform: uppercase; letter-spacing: 3px; margin-bottom: 20px; font-size: 14px;}
-        .auth-inputs { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
-        .auth-input {
-            padding: 14px; background: #0a0a15; border: 2px solid #333; color: white; font-family: 'Courier New', monospace; outline: none; transition: all 0.3s;
+        /* Vintage Display Effects */
+        .glow-overlay {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.9) 100%);
+            pointer-events: none;
+            z-index: 9999;
         }
-        .auth-input:focus { border-color: var(--neon-green); }
-        .auth-btn { padding: 14px; background: var(--neon-green); border: none; color: black; font-weight: bold; cursor: pointer; border-radius: 6px; text-transform: uppercase; letter-spacing: 2px; transition: all 0.3s; }
-        .auth-btn:hover { background: white; color: black; transform: scale(1.02); }
-        .auth-error { color: #ff4d4d; font-size: 12px; margin-top: 15px; min-height: 16px; animation: fadein 0.3s ease-out; }
-        @keyframes fadein { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* Success message */
-        .auth-success { color: var(--neon-green); margin-top: 15px; font-size: 12px; display: none; animation: fadein 0.3s ease-out; }
-        @keyframes fadein { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* Admin Panel Styles (hidden until auth) */
-        #admin-panel { display: none; height: 100vh; flex-direction: column; }
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: #16213e; border-radius: 8px 8px 0 0; margin-bottom: 15px; border: 1px solid var(--neon-green); border-bottom: none; }
-        .led { width: 8px; height: 8px; background: var(--neon-green); border-radius: 50%; animation: pulse 2s infinite; display: inline-block; margin-right: 10px; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        .status { font-family: 'Courier New', monospace; color: var(--neon-green); text-transform: uppercase; letter-spacing: 2px; font-size: 10px; }
-        .terminal { flex: 1; background: #0a0a15; padding: 20px; border-radius: 8px; overflow-y: auto; font-size: 13px; margin-bottom: 15px; border: 1px solid #2d2d4a; }
-        .line { margin-bottom: 8px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
-        .timestamp { color: #888; font-size: 10px; margin-right: 5px; }
-        .system { color: var(--neon-green); }
-        .error { color: #ff4d4d; }
-        .command { color: var(--neon-blue); }
-        .response { color: white; }
-        .input-area { background: #16213e; border-radius: 8px; padding: 15px; border: 1px solid var(--neon-green); display: flex; gap: 10px; }
-        .cmd-input { flex: 1; padding: 14px; background: #0a0a15; border: 2px solid #333; color: white; font-family: 'Courier New', monospace; font-size: 14px; outline: none; border-radius: 6px; }
-        .cmd-input:focus { border-color: var(--neon-green); }
-        .send-btn { padding: 14px 30px; background: var(--neon-green); border: none; color: black; font-weight: bold; cursor: pointer; border-radius: 6px; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s; }
-        .send-btn:hover { background: white; color: black; transform: scale(0.98); }
+        .vignette {
+            position: fixed;
+            inset: 0;
+            box-shadow: inset 0 0 150px rgba(255, 107, 53, 0.3);
+            pointer-events: none;
+            z-index: 9998;
+        }
+        .glow-filter {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(255,107,53,0.08) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: 9997;
+        }
+        /* Dust Particles */
+        .dust {
+            position: fixed;
+            inset: 0;
+            background-image: 
+                radial-gradient(circle, rgba(255,255,255,0.15) 1px, transparent 1px),
+                radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 40px 40px, 60px 60px;
+            background-position: 0 0, 30px 30px;
+            animation: drift 60s linear infinite;
+            opacity: 0.5;
+            pointer-events: none;
+            z-index: 9996;
+        }
+        @keyframes drift {
+            from { background-position: 0 0, 30px 30px; }
+            to { background-position: 40px 40px, 70px 70px; }
+        }
+        /* ASCII Video */
+        .ascii-container {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 6px;
+            line-height: 8px;
+            white-space: pre;
+            text-shadow: 0 0 8px var(--orange);
+            z-index: 9995;
+            max-width: 90vw;
+            overflow-x: hidden;
+        }
+        .ascii-container span {
+            display: block;
+            animation: fadeAscii 3s infinite ease-in-out;
+        }
+        @keyframes fadeAscii {
+            0%, 100% { opacity: 0.6; filter: blur(1px); }
+            50% { opacity: 1; filter: blur(0); }
+        }
+        /* Main Layout */
+        .app {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        /* Header with Clock */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--orange);
+        }
+        .title { font-size: 1.6em; text-shadow: 0 0 10px var(--orange); }
+        .clock { font-size: 1.4em; text-shadow: 0 0 8px var(--orange); }
+        /* Status Banner */
+        .status-banner {
+            background: rgba(255,107,53,0.1);
+            border: 1px solid var(--orange);
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 5px var(--orange);
+            animation: pulseStatus 2s infinite;
+        }
+        @keyframes pulseStatus {
+            0%, 100% { box-shadow: 0 0 5px rgba(255,107,53,0.3); }
+            50% { box-shadow: 0 0 15px rgba(255,107,53,0.6); }
+        }
+        /* Main Layout with Flex */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr 300px;
+            grid-gap: 20px;
+            height: calc(100vh - 220px);
+        }
+        @media (max-width: 1200px) {
+            .main-grid { grid-template-columns: 1fr; height: auto; }
+            .left-panel, .chat-panel, .right-panel { height: auto; }
+        }
+        /* Left Panel */
+        .panel { border: 2px solid var(--orange); padding: 15px; overflow-y: auto; background: rgba(0,0,0,0.3); }
+        .panel h3 { font-size: 1em; margin-bottom: 12px; text-shadow: 0 0 5px var(--orange); }
+        /* Queue Box */
+        .queue-box { display: flex; flex-direction: column; gap: 10px; }
+        .queue-input {
+            width: 100%; background: rgba(0,0,0,0.5); border: 1px solid var(--orange);
+            color: var(--orange); font-family: inherit; padding: 8px; resize: vertical; min-height: 60px;
+        }
+        .queue-list { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+        .queue-item {
+            background: rgba(255,107,53,0.05); padding: 8px 10px; border-left: 3px solid var(--orange);
+            font-size: 0.85em; transition: all 0.5s ease;
+        }
+        .queue-item.active {
+            background: rgba(255,107,53,0.2); border-left-color: #fff;
+            box-shadow: 0 0 10px rgba(255,107,53,0.4);
+        }
+        /* Chat Panel (Center) */
+        .chat-panel { display: flex; flex-direction: column; }
+        .status-banner { height: 48px; margin-bottom: 12px; }
+        .chat-messages { flex: 1; overflow-y: auto; margin-bottom: 15px; padding-right: 10px; }
+        .message { margin-bottom: 12px; max-width: 75%; padding: 8px 12px; border-radius: 4px; position: relative; word-wrap: break-word; }
+        .message.user { background: rgba(255,107,53,0.1); margin-left: auto; text-align: right; border-right: 3px solid var(--orange); }
+        .message.agent { background: rgba(255,107,53,0.05); border-left: 3px solid var(--orange); text-align: left; }
+        .message-meta { font-size: 0.65em; opacity: 0.7; margin-bottom: 4px; }
+        .chat-input-container { display: flex; gap: 10px; }
+        .chat-input { flex: 1; background: rgba(0,0,0,0.5); border: 2px solid var(--orange); color: var(--orange); font-family: inherit; padding: 12px; }
+        .send-btn { background: transparent; border: 2px solid var(--orange); color: var(--orange); padding: 10px 25px; cursor: pointer; font-family: inherit; text-transform: uppercase; transition: all 0.3s ease; }
+        .send-btn:hover { background: rgba(255,107,53,0.1); }
+        /* Right Panel - Project Status */
+        .project-status h3 { text-shadow: 0 0 8px var(--orange); }
+        .agent-avatar {
+            width: 80px; height: 80px; margin: 15px auto; border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #ff8c42, #ff6b35);
+            display: flex; align-items: center; justify-content: center; font-size: 2.5em;
+            border: 3px solid var(--orange); box-shadow: 0 0 25px rgba(255,107,53,0.6);
+            transition: all 0.5s ease;
+        }
+        .agent-avatar.thinking {
+            animation: thinkingPulse 1.5s infinite ease-in-out;
+            box-shadow: 0 0 35px rgba(255,107,53,0.8);
+        }
+        @keyframes thinkingPulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(0.95); opacity: 0.8; }
+        }
+        .project-content { font-size: 0.8em; line-height: 1.6; }
+        /* Edit Button */
+        .edit-btn-container { position: sticky; top: 0; background: var(--bg); padding-bottom: 15px; }
+        .edit-btn {
+            width: calc(100% - 30px); margin: 0 15px; padding: 12px; background: transparent;
+            border: 2px solid var(--orange); color: var(--orange); font-family: inherit; font-size: 1em; cursor: pointer; transition: all 0.3s ease;
+        }
+        .edit-btn:hover { background: rgba(255,107,53,0.1); box-shadow: 0 0 15px rgba(255,107,53,0.4); }
+        /* Telegram Button */
+        .telegram-btn {
+            position: fixed; bottom: 20px; left: 20px; width: 56px; height: 56px;
+            background: #228be6; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 1.8em; text-decoration: none; box-shadow: 0 0 20px rgba(34,139,230,0.6); transition: transform 0.3s ease;
+        }
+        .telegram-btn:hover { transform: scale(1.1); }
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
+        ::-webkit-scrollbar-thumb { background: var(--orange); border-radius: 4px; }
+        /* Password Modal */
+        .password-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: flex; align-items: center; justify-content: center; z-index: 10000; }
+        .password-modal.hidden { display: none; }
+        .auth-box { background: var(--bg); border: 3px solid var(--orange); padding: 35px; max-width: 420px; text-align: center; box-shadow: 0 0 60px rgba(255,107,53,0.4); }
+        .auth-box h2 { margin-bottom: 25px; text-shadow: 0 0 12px var(--orange); }
+        .auth-input { width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--orange); color: var(--orange); padding: 12px; margin-bottom: 15px; font-family: inherit; }
+        .auth-btn { width: 100%; background: transparent; border: 2px solid var(--orange); color: var(--orange); padding: 12px; cursor: pointer; font-family: inherit; text-transform: uppercase; }
+        .auth-btn:hover { background: rgba(255,107,53,0.1); }
     </style>
 </head>
 <body>
+    <!-- Effects -->
+    <div class="glow-overlay"></div>
+    <div class="vignette"></div>
+    <div class="glow-filter"></div>
+    <div class="dust"></div>
 
-<!-- Password Gate -->
-<div id="auth-gate">
-    <div class="auth-box">
-        <div class="auth-title">GND CTRL // Secure Access</div>
-        <p style="color: #aaa; font-size: 12px; margin-bottom: 15px;">Authorized Personnel Only<br>Identity Required For Authentication</p>
+    <!-- ASCII Art Video -->
+    <div class="ascii-container" id="ascii-video"></div>
+
+    <!-- Password Modal -->
+    <div class="password-modal" id="auth-modal">
+        <div class="auth-box">
+            <h2>GND CTRL // AUTHENTICATION</h2>
+            <form id="auth-form">
+                <input type="text" id="username" class="auth-input" placeholder="Username" value="Major_Tom">
+                <input type="password" id="password" class="auth-input" placeholder="Password">
+                <button type="submit" class="auth-btn">Authenticate</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Telegram Button -->
+    <a href="https://t.me/" target="_blank" class="telegram-btn" title="Open Telegram Chat">✈</a>
+
+    <!-- Main App -->
+    <div class="app">
+        <!-- Header -->
+        <div class="header">
+            <div class="title">GND CTRL // HERMES AGENT OS</div>
+            <div class="clock" id="clock">--:--</div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="main-grid">
+            <!-- Left Panel: Queue + Edit Button -->
+            <div class="panel left-panel">
+                <div class="edit-btn-container">
+                    <button class="edit-btn" onclick="toggleEditor()">↩ HTML EDITOR</button>
+                </div>
+
+                <div class="queue-box">
+                    <h3>📋 SCHEDULED TASKS</h3>
+                    <textarea id="queue-input" class="queue-input" placeholder="Enter a task with time/date (e.g., 'Analyze logs at 14:30')..."></textarea>
+                    <button class="edit-btn" style="font-size: 0.85em; padding: 8px;" onclick="addTask()">Schedule Task</button>
+                    
+                    <div class="queue-list" id="queue-list">
+                        <!-- Queue items go here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Panel (Center) -->
+            <div class="panel chat-panel">
+                <div class="status-banner" id="status-banner">GND CTRL // MISSION READY</div>
+                
+                <div class="chat-messages" id="chat-messages">
+                    <!-- Messages appear here -->
+                </div>
+
+                <div class="chat-input-container">
+                    <input type="text" id="chat-input" class="chat-input" placeholder="Type your message..." autocomplete="off">
+                    <button class="send-btn" onclick="sendMessage()">SEND</button>
+                </div>
+            </div>
+
+            <!-- Right Panel: Project Status -->
+            <div class="panel right-panel project-status">
+                <h3>🛰️ ACTIVE PROJECT STATUS</h3>
+                <div id="agent-avatar" class="agent-avatar">✈</div>
+                <div class="project-content">
+                    <strong>Repository:</strong><br>
+                    HVRDWIRE/gnd-ctrl-vercel<br><br>
+                    <strong>Current Task:</strong><br>
+                    Processing user input...<br><br>
+                    <strong>Status:</strong><br>
+                    Online & Responsive<br>
+                    Cache-Control: Enabled<br><br>
+                    <em>Last Update: Live</em>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Constants
+        const AUTH_USERNAME = 'Major_Tom';
+        const AUTH_PASSWORD = 'BlueBear#0010110';
         
-        <form id="auth-form" onsubmit="handleAuth(event)">
-            <input type="text" id="username" class="auth-input" placeholder="USERNAME" autocomplete="off">
-            <input type="password" id="password" class="auth-input" placeholder="PASSWORD" autocomplete="off">
-            <button type="submit" class="auth-btn">AUTHENTICATE ▶</button>
-        </form>
-        
-        <div id="auth-error" class="auth-error"></div>
-        <div id="auth-success" class="auth-success">Authentication Successful<br>Loading...</div>
-    </div>
-</div>
+        // State
+        let lastSender = null;
+        let chatTimeout = null;
 
-<!-- Admin Panel (hidden until auth) -->
-<div id="admin-panel">
-    <div class="header">
-        <div><span class="led"></span>GND CTRL // HERMES AGENT OS</div>
-        <div class="status">● LIVE - MISSION READY</div>
-    </div>
+        // ASCII Art Variants
+        const asciiArt = [
+            "  _____               ___ ",
+            " / _   \\             / _ \\",
+            "| | |) |___  ___ __ | |_| |
+",
+            "| | '_/ -_|-,-,\\_)(/|   / 
+",
+            "\\_, |____(__)_((_||_/  ",
+            "",
+            "  *HERMES AGENT OS*",
+            "  *GND CTRL V1.0*",
+            "  *LIVE // READY*"
+        ];
 
-    <div class="terminal" id="terminal">
-<div class="line"><span class="timestamp">[SYSTEM]</span><span class="system">Welcome, Major Tom. Authentication verified.</span></div>
-<div class="line"><span class="timestamp">[SYSTEM]</span><span class="system">Ground Control online. Ready for orders.</span></div>
-<div class="line"><span class="timestamp">[INFO]</span><span class="command">&gt;</span><span class="response">Type /help to see available commands...</span></div>
-    </div>
-
-    <div class="input-area">
-        <input type="text" class="cmd-input" id="cmd" placeholder="/help, /tasks, /memory, /cron, /system..." autocomplete="off" autofocus spellcheck="false">
-        <button class="send-btn" id="sendBtn">SEND ▶</button>
-    </div>
-
-    <div style="display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
-<button class="quick-btn" onclick="quickCmd('help')">Help</button>
-<button class="quick-btn" onclick="quickCmd('tasks')">Tasks</button>
-<button class="quick-btn" onclick="quickCmd('memory')">Memory</button>
-<button class="quick-btn" onclick="quickCmd('cron')">Cron Jobs</button>
-<button class="quick-btn" onclick="quickCmd('system')">System</button>
-    </div>
-</div>
-
-<script>
-// Hardcoded credentials (client-side auth - suitable for this use case)
-const VALID_USER = "Major_Tom";
-const VALID_PASS = "BlueBear#0010110";
-
-function handleAuth(e) {
-    e.preventDefault();
-    const user = document.getElementById('username').value.trim();
-    const pass = document.getElementById('password').value;
-    const errorDiv = document.getElementById('auth-error');
-    const successDiv = document.getElementById('auth-success');
-    
-    if (user === VALID_USER && pass === VALID_PASS) {
-        // Success
-        document.getElementById('auth-gate').style.display = 'none';
-        document.getElementById('admin-panel').style.display = 'flex';
-        
-        // Welcome message
-        addToTerminal(`<span class="timestamp">[${new Date().toLocaleTimeString()}]</span><span class="system">Welcome aboard, Major Tom. All systems operational.</span>`);
-    } else {
-        // Invalid credentials
-        errorDiv.textContent = `ACCESS DENIED: Invalid username or password.`;
-        successDiv.style.display = 'none';
-    }
-}
-
-// Command handler - responds via chat interface
-function handleCommand(text) {
-    const [cmd, ...args] = text.trim().toLowerCase().split(/\s+/);
-    const responseDiv = document.createElement('div');
-    responseDiv.className = 'line';
-    
-    // Generate timestamp
-    const now = new Date();
-    const timeStr = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-
-    // Command responses
-    const responses = {
-        '/help': `<span class="timestamp">[${timeStr}]</span><span class="system">${cmd}</span>Available GND CTRL commands:<br/>
-&nbsp;&nbsp;/help — Show all available commands<br/>
-&nbsp;&nbsp;/tasks — View active task queue<br/>
-&nbsp;&nbsp;/memory — Check memory status<br/>
-&nbsp;&nbsp;/cron — Review scheduled jobs<br/>
-&nbsp;&nbsp;/system — System diagnostics<br/>
-&nbsp;&nbsp;/status — Current operational status<br/>
-&nbsp;&nbsp;/deploy — Check deployment status<br/>
-&nbsp;&nbsp;/whoami — User identity info<br/>
-&nbsp;&nbsp;/about — Platform information`,
-
-        '/tasks': `<span class="timestamp">[${timeStr}]</span><span class="system">${cmd}</span>Task queue: No active tasks queued.`,
-
-        '/memory': `<span class="timestamp">[${timeStr}]</span><span class="system">${cmd}</span>Memory status:<br/>
-&nbsp;&nbsp;Usage: 55%<br/>
-&nbsp;&nbsp;Capacity: 1,375 chars<br/>
-&nbsp;&nbsp;Used: 760 chars<br/>
-&nbsp;&nbsp;Available: 615 chars`,
-
-        '/cron': `<span class="timestamp">[${timeStr}]</span><span class="system">${cmd}</span>Scheduled jobs:<br/>
-&nbsp;&nbsp;No cron jobs configured.`,
-
-        '/system': `<span class="timestamp">[${timeStr}]</span><span class="system">${cmd}</span>System diagnostics:<br/>
-&nbsp;&nbsp;Platform: ${navigator.platform.replace(/,/g, '.')}<br/>
-&nbsp;&nbsp;JavaScript: ✅ Active<br/>
-&nbsp;&nbsp;Connection: Encrypted<br/>
-&nbsp;&nbsp;Uptime: ${Math.floor(performance.now() / 1000)}ms`,
-
-        '/status': `<span class="timestamp">[${timeStr}]</span><span class="system">${cmd}</span>Operational status:<br/>
-&nbsp;&nbsp;Server: ONLINE<br/>
-&nbsp;&nbsp;API: CONNECTED<br/>
-&nbsp;&nbsp;Security: ENCRYPTED<br/>
-&nbsp;&nbsp;Mode: MISSION READY`,
-
-        '/deploy': `<span class="timestamp">[${timeStr}]</span><span class="system">${cmd}</span>Deployment status:<br/>
-&nbsp;&nbsp;Branch: main<br/>
-&nbsp;&nbsp;Repository: HVRDWIRE/jake<br/>
-&nbsp;&nbsp;Panel Location: /GNDCTRL/<br/>
-&nbsp;&nbsp;Status: DEPLOYED`,
-
-        '/whoami': `<span class="timestamp">[${timeStr}]</span><span class="system">${cmd}</span>User identity:<br/>
-&nbsp;&nbsp;Call sign: MAJOR TOM<br/>
-&nbsp;&nbsp;Name: Jake<br/>
-&nbsp;&nbsp;Role: Theatre Technician & Tinkerer<br/>
-&nbsp;&nbsp;Web: jæk.com<br/>
-&nbsp;&nbsp;Ground Control: ONLINE`,
-
-        '/about': `<span class="timestamp">[${timeStr}]</span><span class="system">${cmd}</span>Hermes Agent OS v1.0<br/>
-&nbsp;&nbsp;Cassette-style command interface<br/>
-&nbsp;&nbsp;Optimized for mobile/field ops<br/>
-&nbsp;&nbsp;Designed by Ground Control<br/>
-&nbsp;&nbsp;Mission: Deploy & Execute`,
-
-        '/clear': `<span class="timestamp">[${timeStr}]</span><span class="system">${cmd}</span>Clearing terminal display...`
-    };
-
-    if (responses[cmd]) {
-        responseDiv.innerHTML = responses[cmd];
-    } else if (text.trim()) {
-        responseDiv.innerHTML = `<span class="timestamp">[${timeStr}]</span><span class="command">&gt;</span><span class="${text.toLowerCase().includes('echo') ? 'system' : 'response'}">${escapeHtml(text)}</span>`;
-        if (!text.toLowerCase().startsWith('/')) {
-            responseDiv.innerHTML += `<br/><span class="timestamp">[${timeStr}]</span><span class="error">${cmd} not recognized. Type /help for available commands.</span>`;
+        let asciiFrame = 0;
+        function updateAscii() {
+            const container = document.getElementById('ascii-video');
+            if (asciiFrame >= asciiArt.length) asciiFrame = 0;
+            container.textContent = asciiArt[asciiFrame];
+            asciiFrame++;
         }
-    } else {
-        responseDiv.innerHTML = `<span class="timestamp">[${timeStr}]</span><span class="system">Waiting for input...`;
-    }
+        setInterval(updateAscii, 250);
 
-    // Append to terminal (maintain scroll position)
-    const terminal = document.getElementById('terminal');
-    terminal.insertBefore(responseDiv, terminal.firstChild);
-}
-
-// Function to escape HTML in user input
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-// Send handler - works with Enter key or button click
-const sendBtn = document.getElementById('sendBtn');
-sendBtn.addEventListener('click', () => {
-    if (document.getElementById('cmd').value.trim()) {
-        handleCommand(document.getElementById('cmd').value);
-        document.getElementById('cmd').value = '';
-        document.getElementById('cmd').focus();
-    }
-});
-
-// Listen for Enter key specifically (like Telegram chat)
-const cmdInput = document.getElementById('cmd');
-cmdInput.addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        e.preventDefault(); // Prevent form submission behavior
-        if (this.value.trim()) {
-            handleCommand(this.value);
-            this.value = '';
-            scrollToBottom();
+        // Clock
+        function updateClock() {
+            const now = new Date();
+            let h = now.getHours();
+            const m = String(now.getMinutes()).padStart(2, '0');
+            if (h >= 12) h -= 12;
+            h = h || 12;
+            document.getElementById('clock').textContent = `${h}:${m}`;
         }
-    }
-});
+        setInterval(updateClock, 1000);
+        updateClock();
 
-// Quick command buttons
-function quickCmd(command) {
-    if (document.getElementById('cmd').value.trim() === '') {
-        handleCommand(command);
-    }
-}
+        // Authentication
+        document.getElementById('auth-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value.trim();
+            
+            if (user === AUTH_USERNAME && pass === AUTH_PASSWORD) {
+                document.getElementById('auth-modal').classList.add('hidden');
+                
+                // Welcome message after auth
+                setTimeout(() => {
+                    addMessage('Authentication verified. Ground Control online. Ready for orders.', 'agent');
+                }, 500);
+            } else {
+                alert('⚠️ Authentication failed. Please check credentials.');
+            }
+        });
 
-// Focus input on load
-document.addEventListener('DOMContentLoaded', () => { cmdInput.focus(); });
+        // Add message to chat
+        function addMessage(text, sender) {
+            const chat = document.getElementById('chat-messages');
+            const banner = document.getElementById('status-banner');
+            
+            const now = new Date();
+            const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}.${String(now.getSeconds()).padStart(2,'0')}`;
 
-// Scroll to bottom when new messages arrive
-function scrollToBottom() {
-    const terminal = document.getElementById('terminal');
-    if (terminal) {
-        terminal.scrollTop = terminal.scrollHeight;
-    }
-}
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${sender}`;
+            msgDiv.innerHTML = `
+                <div class="message-meta">${sender === 'user' ? 'YOU' : 'GROUND CONTROL'} | ${timeStr}</div>
+                <div>${escapeHtml(text)}</div>
+            `;
+            
+            chat.appendChild(msgDiv);
+            chat.scrollTop = chat.scrollHeight;
 
-</script>
+            // Update status banner
+            if (sender === 'user') {
+                banner.textContent = 'MAJOR TOM TO GROUND CONTROL';
+            } else {
+                banner.textContent = 'GROUND CONTROL TO MAJOR TOM';
+            }
+
+            // Toggle thinking state
+            const avatar = document.getElementById('agent-avatar');
+            if (sender === 'agent') {
+                avatar.classList.add('thinking');
+                chatTimeout = setTimeout(() => {
+                    avatar.classList.remove('thinking');
+                }, 2500);
+            }
+        }
+
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Send message handler
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            
+            if (text) {
+                addMessage(text, 'user');
+                input.value = '';
+                
+                // Simulate agent response (replace with actual AI call later)
+                chatTimeout = setTimeout(() => {
+                    const responses = [
+                        "Roger that, Major Tom. Mission received.",
+                        "Understood. Processing now...",
+                        "Copy that. Standing by.",
+                        "GND CTRL acknowledges.",
+                        "Data logged. Ready for next input."
+                    ];
+                    const response = responses[Math.floor(Math.random() * responses.length)];
+                    addMessage(response, 'agent');
+                }, 1500);
+            }
+        }
+
+        // Allow Enter key to send
+        document.getElementById('chat-input').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Queue Management
+        function addTask() {
+            const input = document.getElementById('queue-input');
+            const text = input.value.trim();
+            
+            if (text) {
+                const list = document.getElementById('queue-list');
+                const now = new Date();
+                const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+                
+                const item = document.createElement('div');
+                item.className = 'queue-item active';
+                item.textContent = `⏰ ${timeStr} - ${text}`;
+                
+                list.appendChild(item);
+                input.value = '';
+            }
+        }
+
+        // Editor toggle (placeholder)
+        function toggleEditor() {
+            alert('HTML Editor would open here. Edit the page source directly for custom changes!');
+        }
+
+    </script>
 </body>
 </html>

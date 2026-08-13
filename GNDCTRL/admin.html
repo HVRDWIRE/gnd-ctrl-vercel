@@ -6,197 +6,104 @@
     <title>GND CTRL // Hermes Agent OS</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root {
-            --bg: #2a2a2a;
-            --orange: #ff6b35;
-            --font: 'Courier New', monospace;
-        }
-        body {
-            background: var(--bg);
-            color: var(--orange);
-            font-family: var(--font);
-            min-height: 100vh;
-            position: relative;
-        }
-        /* Vintage Display Effects */
-        .glow-overlay {
-            position: fixed;
-            inset: 0;
-            background: radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.9) 100%);
-            pointer-events: none;
-            z-index: 9999;
-        }
-        .vignette {
-            position: fixed;
-            inset: 0;
-            box-shadow: inset 0 0 150px rgba(255, 107, 53, 0.3);
-            pointer-events: none;
-            z-index: 9998;
-        }
-        .glow-filter {
-            position: fixed;
-            inset: 0;
-            background: radial-gradient(circle at 50% 50%, rgba(255,107,53,0.08) 0%, transparent 60%);
-            pointer-events: none;
-            z-index: 9997;
-        }
+        :root { --bg: #2a2a2a; --orange: #ff6b35; --font: 'Courier New', monospace; }
+        
+        /* Effects */
+        .glow-overlay { position: fixed; inset: 0; background: radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.9) 100%); pointer-events: none; z-index: 9999; }
+        .vignette { position: fixed; inset: 0; box-shadow: inset 0 0 150px rgba(255, 107, 53, 0.3); pointer-events: none; z-index: 9998; }
+        .glow-filter { position: fixed; inset: 0; background: radial-gradient(circle at 50% 50%, rgba(255,107,53,0.08) 0%, transparent 60%); pointer-events: none; z-index: 9997; }
+        
         /* Dust Particles */
-        .dust {
-            position: fixed;
-            inset: 0;
-            background-image: 
-                radial-gradient(circle, rgba(255,255,255,0.15) 1px, transparent 1px),
-                radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
-            background-size: 40px 40px, 60px 60px;
-            background-position: 0 0, 30px 30px;
-            animation: drift 60s linear infinite;
-            opacity: 0.5;
-            pointer-events: none;
-            z-index: 9996;
-        }
-        @keyframes drift {
-            from { background-position: 0 0, 30px 30px; }
-            to { background-position: 40px 40px, 70px 70px; }
-        }
+        .dust { position: fixed; inset: 0; background-image: radial-gradient(circle, rgba(255,255,255,0.15) 1px, transparent 1px); background-size: 40px 40px; animation: drift 60s linear infinite; opacity: 0.5; pointer-events: none; z-index: 9996; }
+        @keyframes drift { from { background-position: 0 0; } to { background-position: 40px 40px; } }
+        
         /* ASCII Video */
-        .ascii-container {
-            position: fixed;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 6px;
-            line-height: 8px;
-            white-space: pre;
-            text-shadow: 0 0 8px var(--orange);
-            z-index: 9995;
-            max-width: 90vw;
-            overflow-x: hidden;
-        }
-        .ascii-container span {
-            display: block;
-            animation: fadeAscii 3s infinite ease-in-out;
-        }
-        @keyframes fadeAscii {
-            0%, 100% { opacity: 0.6; filter: blur(1px); }
-            50% { opacity: 1; filter: blur(0); }
-        }
+        .ascii-container { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); font-size: 6px; line-height: 8px; white-space: pre; text-shadow: 0 0 8px var(--orange); z-index: 9995; max-width: 90vw; overflow-x: hidden; }
+        
         /* Main Layout */
-        .app {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-            position: relative;
-            z-index: 1;
-        }
+        .app { max-width: 1400px; margin: 0 auto; padding: 20px; position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; }
+        
         /* Header with Clock */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid var(--orange);
-        }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid var(--orange); }
         .title { font-size: 1.6em; text-shadow: 0 0 10px var(--orange); }
         .clock { font-size: 1.4em; text-shadow: 0 0 8px var(--orange); }
+        
         /* Status Banner */
-        .status-banner {
-            background: rgba(255,107,53,0.1);
-            border: 1px solid var(--orange);
-            padding: 10px 15px;
-            margin-bottom: 20px;
-            text-shadow: 0 0 5px var(--orange);
-            animation: pulseStatus 2s infinite;
-        }
-        @keyframes pulseStatus {
-            0%, 100% { box-shadow: 0 0 5px rgba(255,107,53,0.3); }
-            50% { box-shadow: 0 0 15px rgba(255,107,53,0.6); }
-        }
-        /* Main Layout with Flex */
-        .main-grid {
-            display: grid;
-            grid-template-columns: 350px 1fr 300px;
-            grid-gap: 20px;
-            height: calc(100vh - 220px);
-        }
-        @media (max-width: 1200px) {
-            .main-grid { grid-template-columns: 1fr; height: auto; }
-            .left-panel, .chat-panel, .right-panel { height: auto; }
-        }
-        /* Left Panel */
+        .status-banner { background: rgba(255,107,53,0.1); border: 1px solid var(--orange); padding: 10px 15px; margin-bottom: 20px; text-shadow: 0 0 5px var(--orange); }
+        
+        /* Main Layout */
+        .main-grid { display: grid; grid-template-columns: 350px 1fr 300px; grid-gap: 20px; flex: 1; min-height: calc(100vh - 200px); }
+        @media (max-width: 1200px) { .main-grid { grid-template-columns: 1fr; min-height: auto; } }
+        
+        /* Panels */
         .panel { border: 2px solid var(--orange); padding: 15px; overflow-y: auto; background: rgba(0,0,0,0.3); }
         .panel h3 { font-size: 1em; margin-bottom: 12px; text-shadow: 0 0 5px var(--orange); }
+        
         /* Queue Box */
         .queue-box { display: flex; flex-direction: column; gap: 10px; }
-        .queue-input {
-            width: 100%; background: rgba(0,0,0,0.5); border: 1px solid var(--orange);
-            color: var(--orange); font-family: inherit; padding: 8px; resize: vertical; min-height: 60px;
-        }
+        .queue-input { width: 100%; background: rgba(0,0,0,0.5); border: 1px solid var(--orange); color: var(--orange); font-family: inherit; padding: 8px; resize: vertical; min-height: 60px; }
         .queue-list { flex: 1; display: flex; flex-direction: column; gap: 6px; }
-        .queue-item {
-            background: rgba(255,107,53,0.05); padding: 8px 10px; border-left: 3px solid var(--orange);
-            font-size: 0.85em; transition: all 0.5s ease;
-        }
-        .queue-item.active {
-            background: rgba(255,107,53,0.2); border-left-color: #fff;
-            box-shadow: 0 0 10px rgba(255,107,53,0.4);
-        }
-        /* Chat Panel (Center) */
+        .queue-item { background: rgba(255,107,53,0.05); padding: 8px 10px; border-left: 3px solid var(--orange); font-size: 0.85em; transition: all 0.5s ease; }
+        .queue-item.active { background: rgba(255,107,53,0.2); border-left-color: #fff; box-shadow: 0 0 10px rgba(255,107,53,0.4); }
+        
+        /* Chat Panel */
         .chat-panel { display: flex; flex-direction: column; }
-        .status-banner { height: 48px; margin-bottom: 12px; }
+        .status-banner.chat-status { height: 48px; margin-bottom: 12px; }
         .chat-messages { flex: 1; overflow-y: auto; margin-bottom: 15px; padding-right: 10px; }
         .message { margin-bottom: 12px; max-width: 75%; padding: 8px 12px; border-radius: 4px; position: relative; word-wrap: break-word; }
         .message.user { background: rgba(255,107,53,0.1); margin-left: auto; text-align: right; border-right: 3px solid var(--orange); }
         .message.agent { background: rgba(255,107,53,0.05); border-left: 3px solid var(--orange); text-align: left; }
         .message-meta { font-size: 0.65em; opacity: 0.7; margin-bottom: 4px; }
+        
+        /* Chat Input */
         .chat-input-container { display: flex; gap: 10px; }
         .chat-input { flex: 1; background: rgba(0,0,0,0.5); border: 2px solid var(--orange); color: var(--orange); font-family: inherit; padding: 12px; }
         .send-btn { background: transparent; border: 2px solid var(--orange); color: var(--orange); padding: 10px 25px; cursor: pointer; font-family: inherit; text-transform: uppercase; transition: all 0.3s ease; }
         .send-btn:hover { background: rgba(255,107,53,0.1); }
-        /* Right Panel - Project Status */
+        
+        /* Right Panel */
         .project-status h3 { text-shadow: 0 0 8px var(--orange); }
-        .agent-avatar {
-            width: 80px; height: 80px; margin: 15px auto; border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, #ff8c42, #ff6b35);
-            display: flex; align-items: center; justify-content: center; font-size: 2.5em;
-            border: 3px solid var(--orange); box-shadow: 0 0 25px rgba(255,107,53,0.6);
-            transition: all 0.5s ease;
-        }
-        .agent-avatar.thinking {
-            animation: thinkingPulse 1.5s infinite ease-in-out;
-            box-shadow: 0 0 35px rgba(255,107,53,0.8);
-        }
-        @keyframes thinkingPulse {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(0.95); opacity: 0.8; }
-        }
+        .agent-avatar { width: 80px; height: 80px; margin: 15px auto; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #ff8c42, #ff6b35); display: flex; align-items: center; justify-content: center; font-size: 2.5em; border: 3px solid var(--orange); box-shadow: 0 0 25px rgba(255,107,53,0.6); transition: all 0.5s ease; }
+        .agent-avatar.thinking { animation: thinkingPulse 1.5s infinite ease-in-out; box-shadow: 0 0 35px rgba(255,107,53,0.8); }
+        @keyframes thinkingPulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(0.95); opacity: 0.8; } }
         .project-content { font-size: 0.8em; line-height: 1.6; }
+        
         /* Edit Button */
         .edit-btn-container { position: sticky; top: 0; background: var(--bg); padding-bottom: 15px; }
-        .edit-btn {
-            width: calc(100% - 30px); margin: 0 15px; padding: 12px; background: transparent;
-            border: 2px solid var(--orange); color: var(--orange); font-family: inherit; font-size: 1em; cursor: pointer; transition: all 0.3s ease;
-        }
+        .edit-btn { width: calc(100% - 30px); margin: 0 15px; padding: 12px; background: transparent; border: 2px solid var(--orange); color: var(--orange); font-family: inherit; cursor: pointer; transition: all 0.3s ease; }
         .edit-btn:hover { background: rgba(255,107,53,0.1); box-shadow: 0 0 15px rgba(255,107,53,0.4); }
+        
         /* Telegram Button */
-        .telegram-btn {
-            position: fixed; bottom: 20px; left: 20px; width: 56px; height: 56px;
-            background: #228be6; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            color: white; font-size: 1.8em; text-decoration: none; box-shadow: 0 0 20px rgba(34,139,230,0.6); transition: transform 0.3s ease;
-        }
+        .telegram-btn { position: fixed; bottom: 20px; left: 20px; width: 56px; height: 56px; background: #228be6; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.8em; text-decoration: none; box-shadow: 0 0 20px rgba(34,139,230,0.6); transition: transform 0.3s ease; }
         .telegram-btn:hover { transform: scale(1.1); }
+        
         /* Scrollbar */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
         ::-webkit-scrollbar-thumb { background: var(--orange); border-radius: 4px; }
+        
         /* Password Modal */
-        .password-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: flex; align-items: center; justify-content: center; z-index: 10000; }
-        .password-modal.hidden { display: none; }
+        .password-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: flex; align-items: center; justify-content: center; z-index: 10000; padding: 20px; }
+        .password-modal.hidden { display: none !important; }
         .auth-box { background: var(--bg); border: 3px solid var(--orange); padding: 35px; max-width: 420px; text-align: center; box-shadow: 0 0 60px rgba(255,107,53,0.4); }
         .auth-box h2 { margin-bottom: 25px; text-shadow: 0 0 12px var(--orange); }
+        
+        /* AUTH INPUTS - NO FORM TAG, MANUAL INPUTS ONLY */
         .auth-input { width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--orange); color: var(--orange); padding: 12px; margin-bottom: 15px; font-family: inherit; }
-        .auth-btn { width: 100%; background: transparent; border: 2px solid var(--orange); color: var(--orange); padding: 12px; cursor: pointer; font-family: inherit; text-transform: uppercase; }
-        .auth-btn:hover { background: rgba(255,107,53,0.1); }
+        
+        /* AUTH BUTTON */
+        .auth-btn { 
+            width: 100%; 
+            background: transparent; 
+            border: 2px solid var(--orange); 
+            color: var(--orange); 
+            padding: 12px; 
+            cursor: pointer; 
+            font-family: inherit; 
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+        }
+        .auth-btn:hover { background: rgba(255,107,53,0.1); box-shadow: 0 0 15px rgba(255,107,53,0.4); }
     </style>
 </head>
 <body>
@@ -209,15 +116,20 @@
     <!-- ASCII Art Video -->
     <div class="ascii-container" id="ascii-video"></div>
 
-    <!-- Password Modal -->
+    <!-- Password Modal - NO FORM TAG, MANUAL INPUTS ONLY -->
     <div class="password-modal" id="auth-modal">
         <div class="auth-box">
             <h2>GND CTRL // AUTHENTICATION</h2>
-            <form id="auth-form">
-                <input type="text" id="username" class="auth-input" placeholder="Username" value="Major_Tom">
-                <input type="password" id="password" class="auth-input" placeholder="Password">
-                <button type="submit" class="auth-btn">Authenticate</button>
-            </form>
+            <div style="text-align: left; margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Username:</label>
+                <input type="text" id="auth-username" class="auth-input" value="Major_Tom">
+            </div>
+            <div style="text-align: left; margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Password:</label>
+                <input type="password" id="auth-password" class="auth-input">
+            </div>
+            <button id="auth-submit-btn" class="auth-btn">Authenticate</button>
+            <p style="margin-top: 15px; font-size: 0.8em; opacity: 0.7;">Click "Authenticate" to log in (no page reload)</p>
         </div>
     </div>
 
@@ -251,9 +163,9 @@
                 </div>
             </div>
 
-            <!-- Chat Panel (Center) -->
-            <div class="panel chat-panel">
-                <div class="status-banner" id="status-banner">GND CTRL // MISSION READY</div>
+            <!-- Chat Panel (Center) - Hidden until authenticated -->
+            <div class="panel chat-panel hidden" id="chat-panel">
+                <div class="status-banner chat-status" id="status-banner">GND CTRL // MISSION READY</div>
                 
                 <div class="chat-messages" id="chat-messages">
                     <!-- Messages appear here -->
@@ -284,23 +196,21 @@
     </div>
 
     <script>
-        // Constants
+        // Constants - ABSOLUTELY NO PAGE RELOAD AUTHENTICATION
         const AUTH_USERNAME = 'Major_Tom';
         const AUTH_PASSWORD = 'BlueBear#0010110';
+        const IS_AUTHENTICATED = false; // Will be set to true after successful auth
         
         // State
-        let lastSender = null;
         let chatTimeout = null;
-
+        
         // ASCII Art Variants
         const asciiArt = [
             "  _____               ___ ",
             " / _   \\             / _ \\",
-            "| | |) |___  ___ __ | |_| |
-",
-            "| | '_/ -_|-,-,\\_)(/|   / 
-",
-            "\\_, |____(__)_((_||_/  ",
+            "| | |) |___  ___ __ | |_| |\n",
+            "| | '_/ -_|-,-,\\_)(/|   /",
+            "\\_, |__,____(__)_((_||_/  ",
             "",
             "  *HERMES AGENT OS*",
             "  *GND CTRL V1.0*",
@@ -328,60 +238,69 @@
         setInterval(updateClock, 1000);
         updateClock();
 
-        // AUTHENTICATION - ROOF-TIGHT FIX: ABSOLUTELY NO PAGE RELOAD
-        // Disable default form submission completely
+        // CRITICAL: Authentication handler with ABSOLUTELY NO PAGE RELOAD
         const authModal = document.getElementById('auth-modal');
-        if (authModal) {
-            const form = authModal.querySelector('form');
-            if (form) {
-                // Prevent ANY form submission behavior
-                form.addEventListener('submit', function(e) {
-                    e.preventDefault();      // Stop default form submission
-                    e.stopPropagation();     // Stop event bubbling
-                    e.stopImmediatePropagation();  // Stop all event listeners
-                    return false;            // Explicitly return false
-                });
-            }
-        }
-                
-                const user = document.getElementById('username').value.trim();
-                const pass = document.getElementById('password').value.trim();
-                
-                if (user === AUTH_USERNAME && pass === AUTH_PASSWORD) {
-                    // CRITICAL: Hide modal - ABSOLUTELY NO PAGE RELOAD
-                    authModal.style.display = 'none';
-                    
-                    // Welcome message after auth
-                    setTimeout(() => {
-                        addMessage('Authentication verified. Ground Control online. Ready for orders.', 'agent');
-                    }, 500);
-                } else {
-                    alert('⚠️ Authentication failed. Please check credentials.');
-                    // Don't reload - let user try again
-                }
-            });
-        }
+        const authUsername = document.getElementById('auth-username');
+        const authPassword = document.getElementById('auth-password');
+        const authSubmitBtn = document.getElementById('auth-submit-btn');
 
-        document.getElementById('auth-form').addEventListener('submit', function(e) {
+        // Set up button click handler (no form submission)
+        authSubmitBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            const user = document.getElementById('username').value.trim();
-            const pass = document.getElementById('password').value.trim();
-            
-            if (user === AUTH_USERNAME && pass === AUTH_PASSWORD) {
-                document.getElementById('auth-modal').classList.add('hidden');
-                
-                // Welcome message after auth
-                setTimeout(() => {
-                    addMessage('Authentication verified. Ground Control online. Ready for orders.', 'agent');
-                }, 500);
-            } else {
-                alert('⚠️ Authentication failed. Please check credentials.');
+            e.stopPropagation();
+            performAuthentication();
+        });
+
+        // Also handle Enter key in password field
+        authPassword.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                performAuthentication();
             }
         });
 
+        function performAuthentication() {
+            const user = authUsername.value.trim();
+            const pass = authPassword.value.trim();
+            
+            // Validate credentials
+            if (user === AUTH_USERNAME && pass === AUTH_PASSWORD) {
+                // SUCCESS: Hide modal WITHOUT reloading page
+                console.log('AUTH SUCCESS - Hiding modal, no reload');
+                authModal.classList.add('hidden');
+                
+                // Show chat panel and welcome message
+                setTimeout(() => {
+                    showChatInterface();
+                }, 500);
+            } else {
+                // FAIL: Show error without reloading
+                alert('⚠️ Authentication failed. Please check credentials.');
+            }
+        }
+
+        function showChatInterface() {
+            // Hide auth modal completely
+            if (authModal) authModal.classList.add('hidden');
+            
+            // Show chat panel
+            const chatPanel = document.getElementById('chat-panel');
+            if (chatPanel) chatPanel.classList.remove('hidden');
+            
+            // Update status banner
+            document.getElementById('status-banner').textContent = 'AUTHENTICATION VERIFIED - READY FOR ORDERS';
+            
+            // Welcome message
+            setTimeout(() => {
+                addMessage('Authentication verified. Ground Control online. Ready for orders.', 'agent');
+            }, 300);
+            
+            console.log('Chat interface shown, authentication complete');
+        }
+
         // Add message to chat
         function addMessage(text, sender) {
-            const chat = document.getElementById('chat-messages');
+            const chatMessages = document.getElementById('chat-messages');
             const banner = document.getElementById('status-banner');
             
             const now = new Date();
@@ -394,8 +313,8 @@
                 <div>${escapeHtml(text)}</div>
             `;
             
-            chat.appendChild(msgDiv);
-            chat.scrollTop = chat.scrollHeight;
+            chatMessages.appendChild(msgDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
 
             // Update status banner
             if (sender === 'user') {
@@ -430,7 +349,7 @@
                 addMessage(text, 'user');
                 input.value = '';
                 
-                // Simulate agent response (replace with actual AI call later)
+                // Simulate agent response
                 chatTimeout = setTimeout(() => {
                     const responses = [
                         "Roger that, Major Tom. Mission received.",
@@ -471,7 +390,7 @@
             }
         }
 
-        // Editor toggle (placeholder)
+        // Editor toggle
         function toggleEditor() {
             alert('HTML Editor would open here. Edit the page source directly for custom changes!');
         }
